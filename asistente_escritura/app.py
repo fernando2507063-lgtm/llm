@@ -1,6 +1,8 @@
 
 import streamlit as st
-import google.generativeai as genai
+
+from google import genai
+
 
 # Configuración de la página
 st.set_page_config(
@@ -21,13 +23,21 @@ api_key = st.text_input(
     type="password"
 )
 
-MODELO = "gemini-2.5-flash"
+
+
+MODELO = "gemini-3.5-flash-lite"
+
 
 def generar_respuesta(prompt):
-    genai.configure(api_key=api_key)
-    modelo = genai.GenerativeModel(MODELO)
-    respuesta = modelo.generate_content(prompt)
+    client = genai.Client(api_key=api_key)
+
+    respuesta = client.models.generate_content(
+        model=MODELO,
+        contents=prompt
+    )
+
     return respuesta.text
+
 
 if api_key:
     st.success("Clave ingresada. Puedes utilizar el asistente.")
