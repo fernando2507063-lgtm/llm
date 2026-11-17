@@ -1,74 +1,136 @@
+
 import streamlit as st
 import google.generativeai as genai
-import os
 
-# Configuración básica de la página
-st.set_page_config(page_title="Asistente de Escritura", page_icon="✍️", layout="centered")
+# Configuración de la página
+st.set_page_config(
+    page_title="Asistente de Escritura IA",
+    page_icon="✍️",
+    layout="centered"
+)
 
 st.title("✍️ Asistente de Escritura Automática")
-st.write("¡Hola! Soy tu asistente de escritura. Puedo ayudarte a sugerir oraciones, corregir tu gramática, mejorar tu estilo o incluso redactar textos completos.")
+st.write(
+    "Proyecto de Inteligencia Artificial - Hybridge. "
+    "Mejora tus textos, continúa ideas y genera contenido con Gemini."
+)
 
-# Configurar API Key
-api_key = st.text_input("Ingresa tu Google Gemini API Key para empezar:", type="password")
+# Configuración de la API
+api_key = st.text_input(
+    "Ingresa tu API Key de Google Gemini:",
+    type="password"
+)
+
+MODELO = "gemini-2.5-flash"
+
+def generar_respuesta(prompt):
+    genai.configure(api_key=api_key)
+    modelo = genai.GenerativeModel(MODELO)
+    respuesta = modelo.generate_content(prompt)
+    return respuesta.text
 
 if api_key:
-    genai.configure(api_key=api_key)
-    
-    # Seleccionar la tarea
+    st.success("Clave ingresada. Puedes utilizar el asistente.")
+
     tarea = st.selectbox(
-        "¿En qué te puedo ayudar hoy?",
-        ("Mejorar redacción y ortografía", "Sugerir continuación", "Escribir un texto desde cero")
+        "¿En qué te puedo ayudar?",
+        (
+            "Mejorar redacción y ortografía",
+            "Sugerir continuación",
+            "Escribir un texto desde cero"
+        )
     )
-    
-    # Opciones dependiendo de la tarea
+
     if tarea == "Mejorar redacción y ortografía":
-        texto_usuario = st.text_area("Pega aquí tu texto:", height=150)
+        texto = st.text_area(
+            "Escribe o pega el texto que deseas mejorar:",
+            height=180
+        )
+
         if st.button("Mejorar texto"):
-            if texto_usuario:
-                with st.spinner("Revisando tu texto..."):
+            if texto.strip():
+                prompt = (
+                    "Corrige la ortografía, gramática y redacción "
+                    "del siguiente texto. Conserva su significado "
+                    "y devuelve únicamente el texto mejorado:\n\n"
+                    + texto
+                )
+
+                with st.spinner("Mejorando texto..."):
                     try:
-                        model = genai.GenerativeModel('gemini-1.5-pro')
-                        prompt = f"Corrige la ortografía y mejora la redacción y estilo del siguiente texto. Devuelve solo el texto corregido:\n\n{texto_usuario}"
-                        response = model.generate_content(prompt)
-                        st.subheader("Texto Mejorado:")
-                        st.write(response.text)
+                        resultado = generar_respuesta(prompt)
+                        st.subheader("Texto mejorado")
+                        st.write(resultado)
                     except Exception as e:
-                        st.error(f"Error: {e}")
+                        st.error(f"Error al generar respuesta: {e}")
             else:
-                st.warning("Por favor, ingresa un texto para mejorar.")
-                
+                st.warning("Ingresa un texto para continuar.")
+
     elif tarea == "Sugerir continuación":
-        texto_usuario = st.text_area("Escribe el inicio de tu texto aquí:", height=150)
-        if st.button("Sugerir continuación"):
-            if texto_usuario:
-                with st.spinner("Pensando en ideas..."):
+        texto = st.text_area(
+            "Escribe el inicio de tu texto:",
+            height=180
+        )
+
+        if st.button("Generar continuación"):
+            if texto.strip():
+                prompt = (
+                    "Continúa el siguiente texto de manera "
+                    "coherente, natural y creativa. "
+                    "Genera un párrafo adicional:\n\n"
+                    + texto
+                )
+
+                with st.spinner("Generando continuación..."):
                     try:
-                        model = genai.GenerativeModel('gemini-1.5-pro')
-                        prompt = f"Continúa escribiendo el siguiente texto de forma coherente y creativa (agrega un párrafo más):\n\n{texto_usuario}"
-                        response = model.generate_content(prompt)
-                        st.subheader("Sugerencia:")
-                        st.write(response.text)
+                        resultado = generar_respuesta(prompt)
+                        st.subheader("Continuación sugerida")
+                        st.write(resultado)
                     except Exception as e:
-                        st.error(f"Error: {e}")
+                        st.error(f"Error al generar respuesta: {e}")
             else:
-                st.warning("Por favor, ingresa el inicio de tu texto.")
-                
+                st.warning("Ingresa el inicio de un texto.")
+
     elif tarea == "Escribir un texto desde cero":
-        tema = st.text_input("¿Sobre qué tema quieres escribir? (Ej. Un correo pidiendo vacaciones, un artículo sobre IA, etc.)")
-        tono = st.selectbox("Elige el tono del texto:", ("Profesional", "Casual", "Creativo", "Persuasivo"))
-        
+        tema = st.text_input(
+            "¿Sobre qué tema deseas escribir?"
+        )
+
+        tono = st.selectbox(
+            "Selecciona el tono:",
+            (
+                "Profesional",
+                "Casual",
+                "Creativo",
+                "Persuasivo"
+            )
+        )
+
         if st.button("Generar texto"):
-            if tema:
+            if tema.strip():
+                prompt = (
+                    f"Escribe un texto completo sobre: {tema}. "
+                    f"Utiliza un tono {tono.lower()}. "
+                    "El texto debe ser claro, coherente "
+                    "y estar bien estructurado."
+                )
+
                 with st.spinner("Escribiendo..."):
                     try:
-                        model = genai.GenerativeModel('gemini-1.5-pro')
-                        prompt = f"Escribe un texto sobre: '{tema}'. El tono del texto debe ser {tono.lower()}."
-                        response = model.generate_content(prompt)
-                        st.subheader("Texto Generado:")
-                        st.write(response.text)
+                        resultado = generar_respuesta(prompt)
+                        st.subheader("Texto generado")
+                        st.write(resultado)
                     except Exception as e:
-                        st.error(f"Error: {e}")
+                        st.error(f"Error al generar respuesta: {e}")
             else:
-                st.warning("Por favor, ingresa un tema.")
+                st.warning("Ingresa un tema para generar el texto.")
+
 else:
-    st.info("Para usar el asistente, necesitas una API Key de Google Gemini. Puedes obtenerla en Google AI Studio.")
+    st.info(
+        "Ingresa tu API Key de Gemini para comenzar."
+    )
+
+st.divider()
+st.caption(
+    "Proyecto académico - Inteligencia Artificial | Hybridge"
+)
